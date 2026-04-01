@@ -2,12 +2,71 @@
 name = "snowflake"
 version = "0.1.0"
 description = "Add your description here"
-requires-python = ">=3.12"
+requires-python = ">=3.12,<3.13"
 dependencies = [
-    "dbt-core",
-    "dbt-snowflake",
+    "dbt-core==1.11.7",
+    "dbt-snowflake==1.11.3",
     "google-cloud-storage>=3.10.1",
     "python-dotenv>=1.2.2",
     "requests>=2.33.1",
     "snowflake-connector-python>=4.4.0",
 ]
+
+[dependency-groups]
+dev = [
+    "bandit[toml]>=1.8.6",
+    "locust>=2.40.4",
+    "mkdocs>=1.6.1",
+    "mkdocs-material>=9.6.23",
+    "mkdocstrings[python]>=0.30.1",
+    "pip-audit>=2.9.0",
+    "pre-commit>=4.3.0",
+    "pyright>=1.1.405",
+    "pytest>=8.4.2",
+    "pytest-cov>=7.0.0",
+    "ruff>=0.13.2",
+    "uvicorn>=0.38.0",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+exclude = [
+    ".git",
+    ".venv",
+    "build",
+    "dbt_packages",
+    "evidence/build",
+    "logs",
+    "node_modules",
+    "target",
+]
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "B", "C4", "UP"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+addopts = "--cov=. --cov-report=xml --cov-report=term-missing"
+
+[tool.coverage.run]
+branch = true
+omit = [
+    "tests/*",
+    "evidence/*",
+]
+
+[tool.coverage.xml]
+output = "coverage.xml"
+
+[tool.bandit]
+exclude_dirs = [".venv", "evidence", "node_modules", "site", "target", "dbt_packages"]
+skips = ["B101", "B608"]
+
+[tool.semantic_release]
+branch = "main"
+version_toml = ["pyproject.toml:project.version"]
+changelog_file = "CHANGELOG.md"
+build_command = ""
+commit_parser = "conventional"

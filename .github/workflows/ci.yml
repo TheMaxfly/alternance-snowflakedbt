@@ -1,0 +1,53 @@
+name: ci
+
+on:
+  push:
+    branches:
+      - main
+      - feat/**
+      - fix/**
+      - chore/**
+  pull_request:
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Install dependencies
+        run: uv sync --locked --all-groups
+
+      - name: Run pre-commit hooks
+        run: uv run pre-commit run --all-files
+
+      - name: Lint with Ruff
+        run: uv run ruff check .
+
+      - name: Check formatting with Ruff
+        run: uv run ruff format --check .
+
+      - name: Typecheck with Pyright
+        run: uv run pyright
+
+      - name: Security scan with Bandit
+        run: uv run bandit -q -c pyproject.toml load_data.py main.py setup.py transform.py tests/test_load_data.py
+
+      - name: Audit dependencies with pip-audit
+        run: uv run pip-audit
+        continue-on-error: true
+
+      - name: Run unit tests
+        run: uv run pytest

@@ -4,6 +4,7 @@ Exécute les transformations SQL : RAW → STAGING → FINAL
 """
 
 import os
+
 import snowflake.connector
 from dotenv import load_dotenv
 
@@ -25,10 +26,14 @@ def get_connection():
 
 def executer_sql_fichier(cur, chemin_fichier: str):
     """Exécute chaque instruction SQL d'un fichier (séparées par ;)."""
-    with open(chemin_fichier, "r") as f:
+    with open(chemin_fichier) as f:
         contenu = f.read()
 
-    instructions = [s.strip() for s in contenu.split(";") if s.strip() and not s.strip().startswith("--")]
+    instructions = [
+        s.strip()
+        for s in contenu.split(";")
+        if s.strip() and not s.strip().startswith("--")
+    ]
 
     for instruction in instructions:
         if not instruction:
@@ -64,7 +69,7 @@ def main():
             print(f"\n[{nom_etape}]")
             chemin = os.path.join(SQL_DIR, fichier_sql)
             executer_sql_fichier(cur, chemin)
-            print(f"  ✓ Terminé")
+            print("  ✓ Terminé")
 
     finally:
         cur.close()

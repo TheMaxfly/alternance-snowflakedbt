@@ -1,0 +1,17 @@
+{
+  "typeCheckingMode": "basic",
+  "include": [
+    "*.py",
+    "tests/**/*.py"
+  ],
+  "exclude": [
+    ".venv",
+    "build",
+    "dbt_packages",
+    "evidence",
+    "node_modules",
+    "target"
+  ],
+  "venvPath": ".",
+  "venv": ".venv"
+}

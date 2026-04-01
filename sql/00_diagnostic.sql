@@ -19,4 +19,3 @@ FROM TABLE(
 SELECT COUNT(*) FROM NYC_TAXI_DB.RAW.yellow_taxi_trips;
 
 SELECT COUNT(*) FROM NYC_TAXI_DB.FINAL.daily_summary;
-
