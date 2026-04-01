@@ -243,7 +243,7 @@ uv run dbt --version
 `load_data.py` supporte maintenant deux modes :
 
 - `TAXI_SOURCE_MODE=local` : charge les fichiers présents dans `TAXI_LOCAL_DIR`
-- `TAXI_SOURCE_MODE=remote` : télécharge les fichiers TLC depuis `TAXI_BASE_URL`
+- `TAXI_SOURCE_MODE=remote` : résout d'abord le lien mensuel depuis la page officielle TLC `TLC_DATA_PAGE`, puis télécharge le fichier
 
 Tu peux cibler un ou plusieurs mois précis avec `TAXI_MONTHS` :
 

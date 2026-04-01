@@ -12,6 +12,7 @@ import glob
 import re
 import shutil
 import tempfile
+from urllib.parse import urljoin
 import snowflake.connector
 import requests
 from dotenv import load_dotenv
@@ -19,6 +20,10 @@ from dotenv import load_dotenv
 load_dotenv()
 
 BASE_URL = os.environ.get("TAXI_BASE_URL", "https://d37ci6vzurychx.cloudfront.net/trip-data")
+TLC_DATA_PAGE = os.environ.get(
+    "TLC_DATA_PAGE",
+    "https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page",
+)
 DOSSIER_LOCAL = os.environ.get("TAXI_LOCAL_DIR", "/home/maxime/Téléchargements/Taxi")
 SOURCE_MODE = os.environ.get("TAXI_SOURCE_MODE", "local").lower()
 RAW_MONTHS = os.environ.get("TAXI_MONTHS", "").strip()
@@ -58,6 +63,34 @@ def build_expected_filenames(mois: list[str]) -> list[str]:
     return [f"yellow_tripdata_{mois_cible}.parquet" for mois_cible in mois]
 
 
+def resolve_tlc_download_url(nom_fichier: str) -> str:
+    """Resolve the monthly Yellow Taxi download URL from the official TLC page.
+
+    The official page currently links to CloudFront assets. We resolve the URL
+    from that page first to avoid hard-coding the CDN path as the only source
+    of truth. If the page format changes or is unavailable, we fall back to the
+    historical direct URL pattern.
+    """
+    fallback_url = f"{BASE_URL}/{nom_fichier}"
+    try:
+        reponse = requests.get(TLC_DATA_PAGE, timeout=60)
+        reponse.raise_for_status()
+    except requests.RequestException as erreur:
+        print(f"  ! Page TLC indisponible, fallback direct utilise: {erreur}")
+        return fallback_url
+
+    motif = re.compile(
+        rf'href="(?P<url>[^"]*{re.escape(nom_fichier)}(?:\?[^"]*)?)"',
+        re.IGNORECASE,
+    )
+    correspondance = motif.search(reponse.text)
+    if correspondance:
+        return urljoin(TLC_DATA_PAGE, correspondance.group("url"))
+
+    print(f"  ! Lien {nom_fichier} introuvable sur la page TLC, fallback direct utilise")
+    return fallback_url
+
+
 def prepare_local_files(tmp_dir: str, fichiers_attendus: list[str]) -> list[str]:
     if fichiers_attendus:
         fichiers_source = [os.path.join(DOSSIER_LOCAL, nom) for nom in fichiers_attendus]
@@ -83,9 +116,10 @@ def prepare_remote_files(tmp_dir: str, fichiers_attendus: list[str]) -> list[str
 
     chemins_prepares = []
     for nom in fichiers_attendus:
-        url = f"{BASE_URL}/{nom}"
+        url = resolve_tlc_download_url(nom)
         chemin_tmp = os.path.join(tmp_dir, nom)
         print(f"  ↓ Téléchargement {nom}")
+        print(f"    Source: {url}")
         reponse = requests.get(url, stream=True, timeout=300)
         reponse.raise_for_status()
         with open(chemin_tmp, "wb") as fichier:
