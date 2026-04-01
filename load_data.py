@@ -7,19 +7,22 @@ load_data.py
 5. COPY INTO : charge les données dans RAW.yellow_taxi_trips
 """
 
-import os
 import glob
+import os
 import re
 import shutil
 import tempfile
 from urllib.parse import urljoin
-import snowflake.connector
+
 import requests
+import snowflake.connector
 from dotenv import load_dotenv
 
 load_dotenv()
 
-BASE_URL = os.environ.get("TAXI_BASE_URL", "https://d37ci6vzurychx.cloudfront.net/trip-data")
+BASE_URL = os.environ.get(
+    "TAXI_BASE_URL", "https://d37ci6vzurychx.cloudfront.net/trip-data"
+)
 TLC_DATA_PAGE = os.environ.get(
     "TLC_DATA_PAGE",
     "https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page",
@@ -36,12 +39,12 @@ MONTH_PATTERN = re.compile(r"^\d{4}-\d{2}$")
 
 def get_connection():
     return snowflake.connector.connect(
-        account   = os.environ["SNOWFLAKE_ACCOUNT"],
-        user      = os.environ["SNOWFLAKE_USER"],
-        password  = os.environ["SNOWFLAKE_PASSWORD"],
-        warehouse = os.environ["SNOWFLAKE_WAREHOUSE"],
-        database  = os.environ["SNOWFLAKE_DATABASE"],
-        role      = os.environ.get("SNOWFLAKE_ROLE", "ACCOUNTADMIN"),
+        account=os.environ["SNOWFLAKE_ACCOUNT"],
+        user=os.environ["SNOWFLAKE_USER"],
+        password=os.environ["SNOWFLAKE_PASSWORD"],
+        warehouse=os.environ["SNOWFLAKE_WAREHOUSE"],
+        database=os.environ["SNOWFLAKE_DATABASE"],
+        role=os.environ.get("SNOWFLAKE_ROLE", "ACCOUNTADMIN"),
     )
 
 
@@ -70,7 +73,9 @@ def fetch_tlc_page_html() -> str:
 
 
 def extract_available_yellow_filenames(page_html: str) -> list[str]:
-    fichiers = re.findall(r"yellow_tripdata_\d{4}-\d{2}\.parquet", page_html, flags=re.IGNORECASE)
+    fichiers = re.findall(
+        r"yellow_tripdata_\d{4}-\d{2}\.parquet", page_html, flags=re.IGNORECASE
+    )
     return sorted(set(fichiers))
 
 
@@ -78,7 +83,9 @@ def resolve_latest_tlc_filename() -> str:
     page_html = fetch_tlc_page_html()
     fichiers = extract_available_yellow_filenames(page_html)
     if not fichiers:
-        raise ValueError("Aucun fichier Yellow Taxi n'a ete detecte sur la page officielle TLC.")
+        raise ValueError(
+            "Aucun fichier Yellow Taxi n'a ete detecte sur la page officielle TLC."
+        )
     return fichiers[-1]
 
 
@@ -106,19 +113,27 @@ def resolve_tlc_download_url(nom_fichier: str, page_html: str | None = None) -> 
     if correspondance:
         return urljoin(TLC_DATA_PAGE, correspondance.group("url"))
 
-    print(f"  ! Lien {nom_fichier} introuvable sur la page TLC, fallback direct utilise")
+    print(
+        f"  ! Lien {nom_fichier} introuvable sur la page TLC, fallback direct utilise"
+    )
     return fallback_url
 
 
 def prepare_local_files(tmp_dir: str, fichiers_attendus: list[str]) -> list[str]:
     if fichiers_attendus:
-        fichiers_source = [os.path.join(DOSSIER_LOCAL, nom) for nom in fichiers_attendus]
+        fichiers_source = [
+            os.path.join(DOSSIER_LOCAL, nom) for nom in fichiers_attendus
+        ]
     else:
-        fichiers_source = sorted(glob.glob(os.path.join(DOSSIER_LOCAL, "yellow_tripdata_*.parquet")))
+        fichiers_source = sorted(
+            glob.glob(os.path.join(DOSSIER_LOCAL, "yellow_tripdata_*.parquet"))
+        )
 
     manquants = [f for f in fichiers_source if not os.path.exists(f)]
     if manquants:
-        raise FileNotFoundError(f"Fichiers introuvables dans {DOSSIER_LOCAL} : {', '.join(manquants)}")
+        raise FileNotFoundError(
+            f"Fichiers introuvables dans {DOSSIER_LOCAL} : {', '.join(manquants)}"
+        )
 
     chemins_prepares = []
     for chemin in fichiers_source:
@@ -187,7 +202,7 @@ def creer_infrastructure(cur):
 # ── Étape 1 : PUT fichiers locaux → stage interne ─────────────────────────────
 def put_fichiers(cur) -> list[str]:
     """Uploade les fichiers Parquet préparés dans le stage interne Snowflake."""
-    print(f"\n[1/3] PUT — fichiers source → stage interne")
+    print("\n[1/3] PUT — fichiers source → stage interne")
     print(f"  Mode source : {SOURCE_MODE}")
 
     with tempfile.TemporaryDirectory(prefix="nyc_taxi_") as tmp_dir:
@@ -202,7 +217,9 @@ def put_fichiers(cur) -> list[str]:
         for chemin_tmp in fichiers:
             nom = os.path.basename(chemin_tmp)
             print(f"  → {nom} ...", end=" ", flush=True)
-            cur.execute(f"PUT file://{chemin_tmp} {STAGE} AUTO_COMPRESS=FALSE OVERWRITE=FALSE")
+            cur.execute(
+                f"PUT file://{chemin_tmp} {STAGE} AUTO_COMPRESS=FALSE OVERWRITE=FALSE"
+            )
             resultat = cur.fetchone()
 
             statut = resultat[6] if resultat else "?"
@@ -218,7 +235,7 @@ def creer_table_depuis_parquet(cur, fichier_reference: str):
     Utilise INFER_SCHEMA pour détecter automatiquement les colonnes
     et CREATE TABLE USING TEMPLATE pour créer la table sans typer manuellement.
     """
-    print(f"\n[2/3] INFER_SCHEMA → CREATE TABLE USING TEMPLATE")
+    print("\n[2/3] INFER_SCHEMA → CREATE TABLE USING TEMPLATE")
     print(f"  → Fichier de référence : {fichier_reference}")
 
     # Vérifie si la table existe déjà
@@ -228,15 +245,19 @@ def creer_table_depuis_parquet(cur, fichier_reference: str):
         AND TABLE_NAME = 'YELLOW_TAXI_TRIPS'
     """)
     if cur.fetchone()[0] > 0:
-        print(f"  ✓ Table déjà existante — INFER_SCHEMA ignoré")
+        print("  ✓ Table déjà existante — INFER_SCHEMA ignoré")
         # Ajoute les colonnes techniques si absentes
-        cur.execute(f"ALTER TABLE {TABLE} ADD COLUMN IF NOT EXISTS _source_file VARCHAR")
-        cur.execute(f"ALTER TABLE {TABLE} ADD COLUMN IF NOT EXISTS _loaded_at TIMESTAMP_NTZ")
-        print(f"  ✓ Colonnes techniques vérifiées")
+        cur.execute(
+            f"ALTER TABLE {TABLE} ADD COLUMN IF NOT EXISTS _source_file VARCHAR"
+        )
+        cur.execute(
+            f"ALTER TABLE {TABLE} ADD COLUMN IF NOT EXISTS _loaded_at TIMESTAMP_NTZ"
+        )
+        print("  ✓ Colonnes techniques vérifiées")
         return
 
     # Création automatique depuis le Parquet
-    cur.execute(f"""
+    cur.execute(f"""  # nosec B608
         CREATE OR REPLACE TABLE {TABLE}
         USING TEMPLATE (
             SELECT ARRAY_AGG(OBJECT_CONSTRUCT(*))
@@ -249,12 +270,14 @@ def creer_table_depuis_parquet(cur, fichier_reference: str):
             )
         )
     """)
-    print(f"  ✓ Table créée avec les colonnes détectées automatiquement")
+    print("  ✓ Table créée avec les colonnes détectées automatiquement")
 
     # Colonnes techniques
     cur.execute(f"ALTER TABLE {TABLE} ADD COLUMN IF NOT EXISTS _source_file VARCHAR")
-    cur.execute(f"ALTER TABLE {TABLE} ADD COLUMN IF NOT EXISTS _loaded_at TIMESTAMP_NTZ")
-    print(f"  ✓ Colonnes techniques ajoutées (_source_file, _loaded_at)")
+    cur.execute(
+        f"ALTER TABLE {TABLE} ADD COLUMN IF NOT EXISTS _loaded_at TIMESTAMP_NTZ"
+    )
+    print("  ✓ Colonnes techniques ajoutées (_source_file, _loaded_at)")
 
     # Affiche les colonnes détectées
     cur.execute(f"DESCRIBE TABLE {TABLE}")
@@ -271,7 +294,7 @@ def copy_into(cur, noms_fichiers: list[str]):
 
     for nom in noms_fichiers:
         # Anti-doublon : vérifie si ce fichier est déjà chargé
-        cur.execute(f"""
+        cur.execute(f"""  # nosec B608
             SELECT COUNT(*) FROM {TABLE}
             WHERE _source_file LIKE '%{nom}%'
         """)
@@ -290,17 +313,22 @@ def copy_into(cur, noms_fichiers: list[str]):
 
         resultats = cur.fetchall()
         for r in resultats:
-            status      = r[1] if len(r) > 1 else "?"
+            status = r[1] if len(r) > 1 else "?"
             rows_parsed = r[2] if len(r) > 2 else 0
             rows_loaded = r[3] if len(r) > 3 else 0
             errors_seen = r[5] if len(r) > 5 else 0
             first_error = r[6] if len(r) > 6 else ""
-            print(f"\n    Status: {status} | Parsed: {rows_parsed:,} | Loaded: {rows_loaded:,} | Errors: {errors_seen}")
+            print(
+                f"\n    Status: {status}"
+                f" | Parsed: {rows_parsed:,}"
+                f" | Loaded: {rows_loaded:,}"
+                f" | Errors: {errors_seen}"
+            )
             if first_error:
                 print(f"    First error: {first_error}")
 
         # Remplit _source_file pour les lignes qui viennent d'être chargées
-        cur.execute(f"""
+        cur.execute(f"""  # nosec B608
             UPDATE {TABLE}
             SET _source_file = '{nom}', _loaded_at = CURRENT_TIMESTAMP()
             WHERE _source_file IS NULL

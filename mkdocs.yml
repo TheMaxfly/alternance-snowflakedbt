@@ -1,0 +1,15 @@
+site_name: Alternance Snowflake dbt
+site_description: Documentation technique du pipeline NYC Taxi
+theme:
+  name: material
+
+nav:
+  - Accueil: index.md
+  - Contribution: contributing.md
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: ["."]
