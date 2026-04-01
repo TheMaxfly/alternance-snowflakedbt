@@ -1,0 +1,10 @@
+version: 2
+
+sources:
+  - name: raw
+    description: Donnees brutes des trajets Yellow Taxi chargees depuis les fichiers Parquet TLC.
+    database: "{{ env_var('SNOWFLAKE_DATABASE', 'NYC_TAXI_DB') }}"
+    schema: RAW
+    tables:
+      - name: yellow_taxi_trips
+        description: Table RAW alimentee par `load_data.py`, incluant les colonnes techniques de tracabilite.

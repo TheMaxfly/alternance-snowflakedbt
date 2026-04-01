@@ -1,0 +1,40 @@
+version: 2
+
+models:
+  - name: fact_trips
+    description: Table de faits principale issue des enrichissements intermediaires.
+    columns:
+      - name: trip_id
+        description: Cle technique de la table de faits.
+        tests:
+          - not_null
+
+  - name: daily_summary
+    description: Resume quotidien des volumes, revenus et indicateurs operationnels.
+    columns:
+      - name: pickup_date
+        description: Jour d'analyse.
+        tests:
+          - not_null
+          - unique
+
+  - name: zone_analysis
+    description: Analyse de performance par zone de prise en charge.
+    columns:
+      - name: pickup_location_id
+        description: Zone TLC de prise en charge.
+        tests:
+          - not_null
+          - unique
+
+  - name: hourly_patterns
+    description: Patterns de demande par heure et jour de la semaine.
+    columns:
+      - name: pickup_hour
+        description: Heure d'analyse.
+        tests:
+          - not_null
+      - name: pickup_day_of_week_num
+        description: Numero du jour de la semaine Snowflake.
+        tests:
+          - not_null

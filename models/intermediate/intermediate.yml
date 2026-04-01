@@ -1,0 +1,34 @@
+version: 2
+
+models:
+  - name: int_trip_metrics
+    description: >
+      Modele d'enrichissement business. Il calcule les metriques de trajet,
+      les categories de distance et les periodes temporelles attendues dans la partie avancee.
+    columns:
+      - name: trip_id
+        description: Cle technique stable calculee pour materialiser les faits.
+        tests:
+          - not_null
+      - name: trip_duration_minutes
+        description: Duree du trajet en minutes.
+        tests:
+          - not_null
+      - name: distance_category
+        description: Categorie metier basee sur la distance du trajet.
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['short_trip', 'medium_trip', 'long_trip', 'very_long_trip']
+      - name: time_period
+        description: Periode temporelle de la prise en charge.
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['morning_rush', 'daytime', 'evening_rush', 'evening', 'night']
+      - name: day_type
+        description: Regroupement semaine ou weekend.
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['weekday', 'weekend']

@@ -1,0 +1,13 @@
+[project]
+name = "snowflake"
+version = "0.1.0"
+description = "Add your description here"
+requires-python = ">=3.12"
+dependencies = [
+    "dbt-core",
+    "dbt-snowflake",
+    "google-cloud-storage>=3.10.1",
+    "python-dotenv>=1.2.2",
+    "requests>=2.33.1",
+    "snowflake-connector-python>=4.4.0",
+]

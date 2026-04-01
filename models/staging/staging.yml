@@ -1,0 +1,31 @@
+version: 2
+
+models:
+  - name: stg_yellow_taxi_trips
+    description: >
+      Modele de staging dbt. Il convertit les timestamps du Parquet, renomme les colonnes
+      en snake_case et applique les filtres de qualite de base avant enrichissement.
+    columns:
+      - name: pickup_datetime
+        description: Date et heure de prise en charge converties en timestamp Snowflake.
+        tests:
+          - not_null
+      - name: dropoff_datetime
+        description: Date et heure de depose converties en timestamp Snowflake.
+        tests:
+          - not_null
+      - name: pickup_location_id
+        description: Identifiant TLC de la zone de prise en charge.
+        tests:
+          - not_null
+      - name: dropoff_location_id
+        description: Identifiant TLC de la zone de depose.
+        tests:
+          - not_null
+      - name: pickup_hour
+        description: Heure de prise en charge de 0 a 23.
+        tests:
+          - accepted_values:
+              arguments:
+                values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
+                quote: false

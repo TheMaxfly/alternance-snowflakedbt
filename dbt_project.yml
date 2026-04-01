@@ -1,0 +1,25 @@
+name: nyc_taxi
+version: 1.0.0
+config-version: 2
+
+profile: snowflake
+
+model-paths: ["models"]
+macro-paths: ["macros"]
+test-paths: ["tests"]
+clean-targets: ["target", "logs", "dbt_packages"]
+
+models:
+  nyc_taxi:
+    +persist_docs:
+      relation: true
+      columns: true
+    staging:
+      +materialized: view
+      +schema: STAGING
+    intermediate:
+      +materialized: view
+      +schema: STAGING
+    marts:
+      +materialized: table
+      +schema: FINAL
