@@ -16,6 +16,8 @@ on:
 jobs:
   run-pipeline:
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
     steps:
       - name: Checkout
@@ -37,7 +39,7 @@ jobs:
           if [ -n "${{ github.event.inputs.data_month }}" ]; then
             target_month="${{ github.event.inputs.data_month }}"
           else
-            target_month="$(date -u -d 'last month' +%Y-%m)"
+            target_month=""
           fi
           echo "target_month=$target_month" >> "$GITHUB_OUTPUT"
 

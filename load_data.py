@@ -63,7 +63,26 @@ def build_expected_filenames(mois: list[str]) -> list[str]:
     return [f"yellow_tripdata_{mois_cible}.parquet" for mois_cible in mois]
 
 
-def resolve_tlc_download_url(nom_fichier: str) -> str:
+def fetch_tlc_page_html() -> str:
+    reponse = requests.get(TLC_DATA_PAGE, timeout=60)
+    reponse.raise_for_status()
+    return reponse.text
+
+
+def extract_available_yellow_filenames(page_html: str) -> list[str]:
+    fichiers = re.findall(r"yellow_tripdata_\d{4}-\d{2}\.parquet", page_html, flags=re.IGNORECASE)
+    return sorted(set(fichiers))
+
+
+def resolve_latest_tlc_filename() -> str:
+    page_html = fetch_tlc_page_html()
+    fichiers = extract_available_yellow_filenames(page_html)
+    if not fichiers:
+        raise ValueError("Aucun fichier Yellow Taxi n'a ete detecte sur la page officielle TLC.")
+    return fichiers[-1]
+
+
+def resolve_tlc_download_url(nom_fichier: str, page_html: str | None = None) -> str:
     """Resolve the monthly Yellow Taxi download URL from the official TLC page.
 
     The official page currently links to CloudFront assets. We resolve the URL
@@ -72,18 +91,18 @@ def resolve_tlc_download_url(nom_fichier: str) -> str:
     historical direct URL pattern.
     """
     fallback_url = f"{BASE_URL}/{nom_fichier}"
-    try:
-        reponse = requests.get(TLC_DATA_PAGE, timeout=60)
-        reponse.raise_for_status()
-    except requests.RequestException as erreur:
-        print(f"  ! Page TLC indisponible, fallback direct utilise: {erreur}")
-        return fallback_url
+    if page_html is None:
+        try:
+            page_html = fetch_tlc_page_html()
+        except requests.RequestException as erreur:
+            print(f"  ! Page TLC indisponible, fallback direct utilise: {erreur}")
+            return fallback_url
 
     motif = re.compile(
         rf'href="(?P<url>[^"]*{re.escape(nom_fichier)}(?:\?[^"]*)?)"',
         re.IGNORECASE,
     )
-    correspondance = motif.search(reponse.text)
+    correspondance = motif.search(page_html)
     if correspondance:
         return urljoin(TLC_DATA_PAGE, correspondance.group("url"))
 
@@ -111,12 +130,16 @@ def prepare_local_files(tmp_dir: str, fichiers_attendus: list[str]) -> list[str]
 
 
 def prepare_remote_files(tmp_dir: str, fichiers_attendus: list[str]) -> list[str]:
+    page_html = fetch_tlc_page_html()
+
     if not fichiers_attendus:
-        raise ValueError("En mode remote, TAXI_MONTHS est requis pour cibler les mois à charger.")
+        dernier_fichier = resolve_latest_tlc_filename()
+        fichiers_attendus = [dernier_fichier]
+        print(f"  Dernier mois Yellow Taxi detecte sur TLC : {dernier_fichier}")
 
     chemins_prepares = []
     for nom in fichiers_attendus:
-        url = resolve_tlc_download_url(nom)
+        url = resolve_tlc_download_url(nom, page_html=page_html)
         chemin_tmp = os.path.join(tmp_dir, nom)
         print(f"  ↓ Téléchargement {nom}")
         print(f"    Source: {url}")

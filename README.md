@@ -277,6 +277,7 @@ Le workflow `.github/workflows/monthly_pipeline.yml` permet :
 - un déclenchement mensuel automatique le 1er de chaque mois
 - un lancement manuel avec choix du mois à charger
 - une ingestion distante TLC
+- sans `data_month`, le workflow prend automatiquement le dernier mois Yellow Taxi effectivement publie sur la page officielle TLC
 - l'exécution de `dbt run` puis `dbt test`
 
 Secrets GitHub à configurer :
