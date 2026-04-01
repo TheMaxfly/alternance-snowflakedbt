@@ -119,7 +119,7 @@ TO_TIMESTAMP_NTZ("tpep_pickup_datetime", 6)
 | pickup_year | `YEAR(pickup)` | Année |
 | pickup_date | `DATE(pickup)` | Date (sans heure) |
 | avg_speed_mph | `distance / (durée / 60)` | Vitesse moyenne en miles/heure |
-| tip_percentage | `(tip_amount / fare_amount) * 100` | Pourcentage de pourboire |
+| taux_pourboire | `(tip_amount / fare_amount) * 100` | Pourcentage du pourboire par rapport au tarif de base |
 
 ## Tables analytiques (STAGING → FINAL)
 
@@ -165,10 +165,10 @@ La partie avancée est désormais implémentée avec `dbt` en complément des sc
 ### Intermediate
 
 - `models/intermediate/int_trip_metrics.sql`
-  - calcul de `trip_duration_minutes`, `avg_speed_mph`, `tip_percentage`
+  - calcul de `trip_duration_minutes`, `avg_speed_mph`, `taux_pourboire`
   - catégorisation des distances
   - catégorisation des périodes temporelles
-  - typologie `weekday` / `weekend`
+  - typologie `jour_semaine` / `weekend`
 
 ### Marts
 

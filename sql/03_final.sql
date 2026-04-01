@@ -13,7 +13,7 @@ SELECT
     ROUND(AVG(trip_duration_minutes), 1) AS avg_duration_min,
     ROUND(SUM("total_amount"), 2)   AS total_revenue,
     ROUND(AVG("total_amount"), 2)   AS avg_revenue_per_trip,
-    ROUND(AVG(tip_percentage), 2)   AS avg_tip_pct,
+    ROUND(AVG(taux_pourboire), 2)   AS avg_taux_pourboire_pct,
     SUM("passenger_count")          AS total_passengers
 FROM STAGING.clean_trips
 GROUP BY pickup_date
@@ -27,7 +27,7 @@ SELECT
     ROUND(AVG("total_amount"), 2)   AS avg_revenue,
     ROUND(SUM("total_amount"), 2)   AS total_revenue,
     ROUND(AVG("trip_distance"), 2)  AS avg_distance,
-    ROUND(AVG(tip_percentage), 2)   AS avg_tip_pct,
+    ROUND(AVG(taux_pourboire), 2)   AS avg_taux_pourboire_pct,
     COUNT(DISTINCT pickup_date)     AS active_days
 FROM STAGING.clean_trips
 GROUP BY "PULocationID"
@@ -42,7 +42,7 @@ SELECT
     ROUND(AVG("total_amount"), 2)   AS avg_revenue,
     ROUND(AVG("trip_distance"), 2)  AS avg_distance,
     ROUND(AVG(avg_speed_mph), 2)    AS avg_speed_mph,
-    ROUND(AVG(tip_percentage), 2)   AS avg_tip_pct
+    ROUND(AVG(taux_pourboire), 2)   AS avg_taux_pourboire_pct
 FROM STAGING.clean_trips
 GROUP BY pickup_hour, pickup_day_of_week
 ORDER BY pickup_day_of_week, pickup_hour;

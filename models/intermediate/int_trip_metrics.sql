@@ -59,23 +59,23 @@ select
     case
         when fare_amount > 0 then round((tip_amount / fare_amount) * 100, 2)
         else null
-    end as tip_percentage,
+    end as taux_pourboire,
     case
-        when trip_distance <= 1 then 'short_trip'
-        when trip_distance <= 5 then 'medium_trip'
-        when trip_distance <= 10 then 'long_trip'
-        else 'very_long_trip'
+        when trip_distance <= 1 then 'court_trajet'
+        when trip_distance <= 5 then 'trajet_moyen'
+        when trip_distance <= 10 then 'long_trajet'
+        else 'tres_long_trajet'
     end as distance_category,
     case
-        when pickup_hour between 6 and 9 then 'morning_rush'
-        when pickup_hour between 10 and 15 then 'daytime'
-        when pickup_hour between 16 and 19 then 'evening_rush'
-        when pickup_hour between 20 and 23 then 'evening'
-        else 'night'
+        when pickup_hour between 6 and 9 then 'rush_matinal'
+        when pickup_hour between 10 and 15 then 'journee'
+        when pickup_hour between 16 and 19 then 'rush_soir'
+        when pickup_hour between 20 and 23 then 'soiree'
+        else 'nuit'
     end as time_period,
     case
         when pickup_day_of_week_num in (0, 6) then 'weekend'
-        else 'weekday'
+        else 'jour_semaine'
     end as day_type,
     source_file,
     loaded_at

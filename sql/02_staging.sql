@@ -73,7 +73,27 @@ SELECT
         WHEN "fare_amount" > 0
         THEN ROUND(("tip_amount" / "fare_amount") * 100, 2)
         ELSE NULL
-    END AS tip_percentage,
+    END AS taux_pourboire,
+
+    CASE
+        WHEN "trip_distance" <= 1 THEN 'court_trajet'
+        WHEN "trip_distance" <= 5 THEN 'trajet_moyen'
+        WHEN "trip_distance" <= 10 THEN 'long_trajet'
+        ELSE 'tres_long_trajet'
+    END AS distance_category,
+
+    CASE
+        WHEN HOUR(tpep_pickup_datetime) BETWEEN 6 AND 9 THEN 'rush_matinal'
+        WHEN HOUR(tpep_pickup_datetime) BETWEEN 10 AND 15 THEN 'journee'
+        WHEN HOUR(tpep_pickup_datetime) BETWEEN 16 AND 19 THEN 'rush_soir'
+        WHEN HOUR(tpep_pickup_datetime) BETWEEN 20 AND 23 THEN 'soiree'
+        ELSE 'nuit'
+    END AS time_period,
+
+    CASE
+        WHEN DAYOFWEEK(tpep_pickup_datetime) IN (0, 6) THEN 'weekend'
+        ELSE 'jour_semaine'
+    END AS day_type,
 
     _SOURCE_FILE,
     _LOADED_AT

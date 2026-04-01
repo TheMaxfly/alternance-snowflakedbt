@@ -19,16 +19,16 @@ models:
         tests:
           - accepted_values:
               arguments:
-                values: ['short_trip', 'medium_trip', 'long_trip', 'very_long_trip']
+                values: ['court_trajet', 'trajet_moyen', 'long_trajet', 'tres_long_trajet']
       - name: time_period
         description: Periode temporelle de la prise en charge.
         tests:
           - accepted_values:
               arguments:
-                values: ['morning_rush', 'daytime', 'evening_rush', 'evening', 'night']
+                values: ['rush_matinal', 'journee', 'rush_soir', 'soiree', 'nuit']
       - name: day_type
         description: Regroupement semaine ou weekend.
         tests:
           - accepted_values:
               arguments:
-                values: ['weekday', 'weekend']
+                values: ['jour_semaine', 'weekend']

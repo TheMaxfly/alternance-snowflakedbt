@@ -29,7 +29,7 @@ select
     cbd_congestion_fee,
     trip_duration_minutes,
     avg_speed_mph,
-    tip_percentage,
+    taux_pourboire,
     distance_category,
     time_period,
     day_type,
