@@ -9,6 +9,9 @@ on:
         type: string
   schedule:
     - cron: "0 6 1 * *"
+  push:
+    branches:
+      - feat/bootstrap-snowflake-dbt
 
 jobs:
   run-pipeline:
