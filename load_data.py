@@ -256,8 +256,9 @@ def creer_table_depuis_parquet(cur, fichier_reference: str):
         print("  ✓ Colonnes techniques vérifiées")
         return
 
-    # Création automatique depuis le Parquet
-    cur.execute(f"""  # nosec B608
+    # Création automatique depuis le Parquet.
+    # nosec B608
+    cur.execute(f"""
         CREATE OR REPLACE TABLE {TABLE}
         USING TEMPLATE (
             SELECT ARRAY_AGG(OBJECT_CONSTRUCT(*))
@@ -293,8 +294,9 @@ def copy_into(cur, noms_fichiers: list[str]):
     print(f"\n[3/3] COPY INTO {TABLE}")
 
     for nom in noms_fichiers:
-        # Anti-doublon : vérifie si ce fichier est déjà chargé
-        cur.execute(f"""  # nosec B608
+        # Anti-doublon : vérifie si ce fichier est déjà chargé.
+        # nosec B608
+        cur.execute(f"""
             SELECT COUNT(*) FROM {TABLE}
             WHERE _source_file LIKE '%{nom}%'
         """)
@@ -327,8 +329,9 @@ def copy_into(cur, noms_fichiers: list[str]):
             if first_error:
                 print(f"    First error: {first_error}")
 
-        # Remplit _source_file pour les lignes qui viennent d'être chargées
-        cur.execute(f"""  # nosec B608
+        # Remplit _source_file pour les lignes qui viennent d'être chargées.
+        # nosec B608
+        cur.execute(f"""
             UPDATE {TABLE}
             SET _source_file = '{nom}', _loaded_at = CURRENT_TIMESTAMP()
             WHERE _source_file IS NULL
